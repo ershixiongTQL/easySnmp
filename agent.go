@@ -61,7 +61,7 @@ type standardTable struct {
 	ParentNode *string
 	IndexName  string
 	Entries    []StandardTableEntry
-	getCell    func(col uint, row uint) (string, error)
+	getCell    StandardTableGetCell
 }
 
 type serviceInfoType struct {
@@ -87,7 +87,9 @@ type MiniSnmpAgent struct {
 	lock sync.Mutex
 }
 
-func (agent *MiniSnmpAgent) AddTable(name string, entries []StandardTableEntry, getCell func(col uint, row uint) (string, error)) {
+type StandardTableGetCell func(tableName string, col uint, row uint) (string, error)
+
+func (agent *MiniSnmpAgent) AddTable(name string, entries []StandardTableEntry, callback StandardTableGetCell) {
 
 	agent.lock.Lock()
 	defer agent.lock.Unlock()
@@ -102,13 +104,9 @@ func (agent *MiniSnmpAgent) AddTable(name string, entries []StandardTableEntry, 
 
 	table.Name = name
 	table.Entries = entries
-	table.getCell = getCell
+	table.getCell = callback
 	table.ParentNode = &agent.EnterpriseInfo.ProductName
 	table.IndexName = entries[0].Name
-
-	// for i := range entries {
-	// 	entries[i].ParentName = &table.Name
-	// }
 
 	agent.tables = append(agent.tables, table)
 }
@@ -181,10 +179,12 @@ func CreateAgent(basicInfo *EnterpriseInfoType, masterAgent string) (agent *Mini
 		agent.EnterpriseInfo = *basicInfo
 	}
 
-	if masterAgent != "" {
-		agent.serviceInfo.masterAgent = masterAgent
-		go agent.start("tcp", masterAgent)
+	if masterAgent == "" {
+		masterAgent = "127.0.0.1:705"
 	}
+
+	agent.serviceInfo.masterAgent = masterAgent
+	go agent.start("tcp", masterAgent)
 
 	return
 }

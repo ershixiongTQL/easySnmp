@@ -48,13 +48,13 @@ func tableGet(agent *MiniSnmpAgent, objNum uint, tableId uint, subOids []int, ge
 		if len(subOids) == 2 {
 
 			retOid = agent.rootOID() + "." + strconv.Itoa(int(objNum)) + ".1." + strconv.Itoa(colNum) + ".1"
-			retValue, err = thisTable.getCell(uint(colNum-1), 0)
+			retValue, err = thisTable.getCell(thisTable.Name, uint(colNum-1), 0)
 
 		} else if len(subOids) == 3 {
 
 			rowNum := subOids[2]
 			retOid = fmt.Sprintf(agent.rootOID()+".%d.1.%d.%d", int(objNum), colNum, rowNum+1)
-			retValue, err = thisTable.getCell(uint(colNum-1), uint(rowNum-1+1))
+			retValue, err = thisTable.getCell(thisTable.Name, uint(colNum-1), uint(rowNum-1+1))
 		}
 
 	} else {
@@ -65,7 +65,7 @@ func tableGet(agent *MiniSnmpAgent, objNum uint, tableId uint, subOids []int, ge
 
 		rowNum := subOids[2]
 		retOid = fmt.Sprintf(agent.rootOID()+".%d.1.%d.%d", int(tableId+1), colNum, rowNum)
-		retValue, err = thisTable.getCell(uint(colNum-1), uint(rowNum-1))
+		retValue, err = thisTable.getCell(thisTable.Name, uint(colNum-1), uint(rowNum-1))
 	}
 
 	switch thisTable.Entries[colNum-1].Type {
